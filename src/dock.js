@@ -54,7 +54,12 @@ module.exports = class Dock {
     this.subscriptions = new CompositeDisposable(
       this.paneContainer.onDidActivatePane(() => {
         this.show()
-        this.didActivate(this)
+        
+        // Prevent the workspace from marking this as the active text editor.
+        // Allow the pane to mark this as the active text editor.
+        if(this.isPaneItemTrueTextEditor()) {
+          this.didActivate(this)
+        }
       }),
       this.paneContainer.observePanes(pane => {
         pane.onDidAddItem(this.handleDidAddPaneItem.bind(this))
@@ -606,6 +611,16 @@ module.exports = class Dock {
 
   confirmClose (options) {
     return this.paneContainer.confirmClose(options)
+  }
+  
+  // Is this dock's pane active item a text editor?
+  isPaneItemTrueTextEditor () {
+    var activePaneItem = this.paneContainer.getActivePane().getActiveItem();
+    
+    if(typeof activePaneItem.getIsEditor === "function" && !activePaneItem.getIsEditor())
+      return false;
+    
+    return true;
   }
 
   /*
